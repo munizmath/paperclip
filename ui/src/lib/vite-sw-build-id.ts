@@ -85,6 +85,15 @@ export function serviceWorkerBuildIdPlugin(
     },
     closeBundle() {
       const swPath = path.resolve(root, outDir, serviceWorkerFileName);
+      // Vite normally copies publicDir assets during the build. Keep the
+      // production build resilient when a custom build pipeline omits that
+      // copy: the worker is a required input to this plugin, so materialize
+      // the source asset before stamping it instead of failing with ENOENT.
+      if (!fs.existsSync(swPath)) {
+        const sourcePath = path.resolve(root, "public", serviceWorkerFileName);
+        fs.mkdirSync(path.dirname(swPath), { recursive: true });
+        fs.copyFileSync(sourcePath, swPath);
+      }
       const source = fs.readFileSync(swPath, "utf8");
       const css = fs.readFileSync(path.resolve(root, "src/index.css"), "utf8");
       const stamped = stampServiceWorkerBuildId(

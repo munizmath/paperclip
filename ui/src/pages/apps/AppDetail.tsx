@@ -77,6 +77,8 @@ import {
   connectionOwnerProfile,
 } from "./connection-owner";
 import { describeError } from "@/api/errors";
+import { i18n } from "@/i18n";
+import { translateLegacyPtBr } from "@/i18n/legacy-pt-br";
 
 export { connectionAddress, connectionTransportLabel };
 
@@ -847,7 +849,7 @@ export function AppDetailHeader({
             <StatusBadge status={status} />
             {connection.config?.provider !== "agentmail" && actionCount !== null && (
               <span className="text-xs text-muted-foreground">
-                {actionCount} {actionCount === 1 ? "action" : "actions"} available
+                {actionCount} {uiText(actionCount === 1 ? "action" : "actions")} {uiText(actionCount === 1 ? "available" : "available plural")}
               </span>
             )}
             {connectionDisplaySecondaryHint(connection) ? (
@@ -897,6 +899,10 @@ function unverifiedRemoteHost(connection: ToolConnection): string | null {
 }
 
 type StatusInfo = { label: string; tone: "connected" | "attention" | "paused" };
+
+function uiText(value: string): string {
+  return i18n.resolvedLanguage === "pt-BR" ? translateLegacyPtBr(value) : value;
+}
 
 function statusFor(connection: ToolConnection): StatusInfo {
   if (connection.enabled === false || connection.status === "disabled") {

@@ -40,6 +40,12 @@ import {
 } from "./gateway-helpers";
 import { gatewaysQueryKey } from "./NewGatewayDialog";
 import { describeError } from "@/api/errors";
+import { i18n } from "@/i18n";
+import { translateLegacyPtBr } from "@/i18n/legacy-pt-br";
+
+function uiText(value: string): string {
+  return i18n.resolvedLanguage === "pt-BR" ? translateLegacyPtBr(value) : value;
+}
 
 type PanelKey = string;
 type ClientIcon = ComponentType<{ className?: string }>;
@@ -92,7 +98,7 @@ export function ConnectClientDialog({
   );
   const tokenGroups = useMemo<SearchableSelectGroup<string, TokenOption>[]>(() => [{
     id: "tokens",
-    label: "Available this session",
+    label: uiText("Available this session"),
     options: availableTokens.map((token) => ({
       key: token.id,
       value: token.id,
@@ -101,7 +107,7 @@ export function ConnectClientDialog({
       searchText: `${token.name} ${token.clientLabel} ${token.tokenPrefix}`,
       token,
     })),
-  }], [availableTokens]);
+  }], [availableTokens, i18n.resolvedLanguage]);
 
   const [active, setActive] = useState<PanelKey>(snippets[0]?.client ?? "raw_url");
   const [selectedTokenId, setSelectedTokenId] = useState("");
@@ -130,14 +136,14 @@ export function ConnectClientDialog({
       onTokenCreated(token);
       setSelectedTokenId(token.id);
       pushToast({
-        title: "Token issued",
-        body: "The copy buttons now include its full Authorization header.",
+        title: uiText("Token issued"),
+        body: uiText("The copy buttons now include its full Authorization header."),
         tone: "success",
       });
       await queryClient.invalidateQueries({ queryKey: gatewaysQueryKey(gateway.companyId) });
     },
     onError: (error) => pushToast({
-      title: "Token was not issued",
+      title: uiText("Token was not issued"),
       body: describeError(error).body,
       tone: "error",
     }),
@@ -146,10 +152,10 @@ export function ConnectClientDialog({
   async function copyText(value: string, label: string) {
     try {
       await copyTextToClipboard(value);
-      pushToast({ title: "Copied", body: label, tone: "success" });
+      pushToast({ title: uiText("Copied"), body: label, tone: "success" });
     } catch (error) {
       pushToast({
-        title: "Copy failed",
+        title: uiText("Copy failed"),
         body: describeError(error).body,
         tone: "error",
       });
@@ -181,47 +187,46 @@ export function ConnectClientDialog({
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            Client snippets
+            {uiText("Client snippets")}
             <Tooltip>
               <TooltipTrigger asChild>
-                <button type="button" aria-label="About client snippets" className="text-muted-foreground hover:text-foreground">
+                <button type="button" aria-label={uiText("About client snippets")} className="text-muted-foreground hover:text-foreground">
                   <HelpCircle className="h-4 w-4" />
                 </button>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs text-xs">
-                Give this MCP gateway configuration to your tool. It does not give it access to Paperclip or
-                skills; it only gateways calls between the client and the tools exposed here.
+                {uiText("Give this MCP gateway configuration to your tool.")} {uiText("It does not give it access to Paperclip or skills; it only gateways calls between the client and the tools exposed here.")}
               </TooltipContent>
             </Tooltip>
           </DialogTitle>
           <DialogDescription>
-            Choose a client and copy a complete, authenticated configuration.
+            {uiText("Choose a client and copy a complete, authenticated configuration.")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
-          <span className="text-xs font-medium text-muted-foreground">Authorization</span>
+          <span className="text-xs font-medium text-muted-foreground">{uiText("Authorization")}</span>
           {availableTokens.length > 0 ? (
             <SearchableSelect<string, TokenOption>
               value={selectedTokenId}
               groups={tokenGroups}
               onValueChange={setSelectedTokenId}
-              placeholder="Issue a token"
-              searchPlaceholder="Search tokens…"
-              emptyMessage="No copyable tokens."
+              placeholder={uiText("Issue a token")}
+              searchPlaceholder={uiText("Search tokens…")}
+              emptyMessage={uiText("No copyable tokens.")}
               contentWidth="auto"
               triggerClassName="h-8 w-auto max-w-xs rounded-full px-3"
-              renderValue={(option) => option ? `${option.label} · ${maskedTokenLabel(option.token)}` : "Issue a token"}
+              renderValue={(option) => option ? `${uiText(option.label)} · ${maskedTokenLabel(option.token)}` : uiText("Issue a token")}
               renderOption={(option) => (
                 <span className="flex min-w-0 flex-col">
-                  <span className="truncate">{option.label}</span>
+                  <span className="truncate">{uiText(option.label)}</span>
                   <span className="truncate font-mono text-(length:--text-micro) text-muted-foreground">
                     {maskedTokenLabel(option.token)}
                   </span>
                 </span>
               )}
               createItem={{
-                render: () => <span>+ Issue a new token</span>,
+                render: () => <span>+ {uiText("Issue a new token")}</span>,
                 onSelect: issueToken,
               }}
             />
@@ -234,7 +239,7 @@ export function ConnectClientDialog({
               disabled={issueTokenMutation.isPending}
               onClick={issueToken}
             >
-              {issueTokenMutation.isPending ? "Issuing…" : "Issue a token"}
+              {uiText(issueTokenMutation.isPending ? "Issuing…" : "Issue a token")}
             </Button>
           )}
           {selectedToken ? (
@@ -242,24 +247,22 @@ export function ConnectClientDialog({
               type="button"
               variant="ghost"
               size="sm"
-              onClick={() => void copyText(`Authorization: Bearer ${selectedToken.token}`, "Authorization header")}
+              onClick={() => void copyText(`Authorization: Bearer ${selectedToken.token}`, uiText("Authorization header"))}
             >
               <Copy className="mr-1 h-3.5 w-3.5" />
-              Copy header
+              {uiText("Copy header")}
             </Button>
           ) : null}
         </div>
 
         {!selectedToken ? (
           <p className="text-xs text-muted-foreground">
-            Issue a token before copying a snippet; the full <code>Authorization: Bearer …</code> header is
-            required. Existing token secrets cannot be retrieved again, so only tokens issued in this page
-            session can fill a snippet.
+            {uiText("Issue a token before copying a snippet; the full")} <code>Authorization: Bearer …</code> {uiText("header is required.")} {uiText("Existing token secrets cannot be retrieved again, so only tokens issued in this page session can fill a snippet.")}
           </p>
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-(--gtc-10)">
-          <nav className="flex gap-1 overflow-x-auto sm:flex-col" aria-label="Clients">
+          <nav className="flex gap-1 overflow-x-auto sm:flex-col" aria-label={uiText("Clients")}>
             {snippets.map((snippet) => {
               const Icon = CLIENT_ICONS[snippet.client];
               return (
@@ -275,7 +278,7 @@ export function ConnectClientDialog({
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
-                  {snippet.label}
+                  {uiText(snippet.label)}
                 </button>
               );
             })}
@@ -290,7 +293,7 @@ export function ConnectClientDialog({
               )}
             >
               <LinkIcon className="h-4 w-4 shrink-0" />
-              Raw URL
+              {uiText("Raw URL")}
             </button>
           </nav>
 
@@ -298,19 +301,19 @@ export function ConnectClientDialog({
             {active === "raw_url" ? (
               <div className="space-y-3">
                 <div className="space-y-1.5">
-                  <div className="text-sm font-medium text-foreground">Endpoint URL</div>
+                  <div className="text-sm font-medium text-foreground">{uiText("Endpoint URL")}</div>
                   <div className="flex items-center gap-2">
                     <code className="min-w-0 flex-1 truncate rounded-md bg-muted px-3 py-2 font-mono text-xs text-muted-foreground">
                       {endpoint}
                     </code>
-                    <Button variant="outline" size="sm" onClick={() => void copyText(endpoint, "Endpoint URL")}>
+                    <Button variant="outline" size="sm" onClick={() => void copyText(endpoint, uiText("Endpoint URL"))}>
                       <Copy className="mr-1 h-3.5 w-3.5" />
-                      Copy
+                      {uiText("Copy")}
                     </Button>
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <div className="text-sm font-medium text-foreground">Authorization header</div>
+                  <div className="text-sm font-medium text-foreground">{uiText("Authorization header")}</div>
                   <code className="block truncate rounded-md bg-muted px-3 py-2 font-mono text-xs text-muted-foreground">
                     {selectedToken ? `Authorization: Bearer ${maskedTokenLabel(selectedToken)}` : "Authorization: Bearer pcgw_•••"}
                   </code>
@@ -319,15 +322,15 @@ export function ConnectClientDialog({
             ) : activeSnippet ? (
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="text-sm font-medium text-foreground">{activeSnippet.label}</div>
+                  <div className="text-sm font-medium text-foreground">{uiText(activeSnippet.label)}</div>
                   <Button
                     variant="outline"
                     size="sm"
                     disabled={!copyConfigText}
-                    onClick={() => copyConfigText && void copyText(copyConfigText, `${activeSnippet.label} config`)}
+                    onClick={() => copyConfigText && void copyText(copyConfigText, `${uiText(activeSnippet.label)} config`)}
                   >
                     <Copy className="mr-1 h-3.5 w-3.5" />
-                    Copy
+                    {uiText("Copy")}
                   </Button>
                 </div>
                 <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-md bg-muted p-3 font-mono text-xs text-muted-foreground">
@@ -335,17 +338,16 @@ export function ConnectClientDialog({
                 </pre>
                 {activeSnippet.notes.length > 0 ? (
                   <ul className="space-y-1 text-xs text-muted-foreground">
-                    {activeSnippet.notes.map((note) => <li key={note}>{note}</li>)}
+                    {activeSnippet.notes.map((note) => <li key={note}>{uiText(note)}</li>)}
                   </ul>
                 ) : null}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No client snippets available for this gateway.</p>
+              <p className="text-sm text-muted-foreground">{uiText("No client snippets available for this gateway.")}</p>
             )}
 
             <p className="text-xs text-muted-foreground">
-              Treat the token like a password. Anyone holding it can call the tools this gateway allows. Revoke
-              it if it leaks.
+              {uiText("Treat the token like a password.")} {uiText("Anyone holding it can call the tools this gateway allows.")} {uiText("Revoke it if it leaks.")}
             </p>
           </div>
         </div>
@@ -353,7 +355,7 @@ export function ConnectClientDialog({
         <DialogFooter>
           <Button onClick={() => onOpenChange(false)}>
             <Check className="mr-1.5 h-4 w-4" />
-            Done
+            {uiText("Done")}
           </Button>
         </DialogFooter>
       </DialogContent>

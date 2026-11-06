@@ -11,6 +11,12 @@ import { queryKeys } from "@/lib/queryKeys";
 import { copyTextToClipboard } from "@/lib/clipboard";
 import { Badge } from "@/components/ui/badge";
 import { describeError } from "@/api/errors";
+import { i18n } from "@/i18n";
+import { translateLegacyPtBr } from "@/i18n/legacy-pt-br";
+
+function uiText(value: string): string {
+  return i18n.resolvedLanguage === "pt-BR" ? translateLegacyPtBr(value) : value;
+}
 
 const inviteRoleOptions = [
   {
@@ -380,11 +386,15 @@ export function InvitesSection() {
 }
 
 function formatInviteState(state: "active" | "accepted" | "expired" | "revoked") {
-  return state.charAt(0).toUpperCase() + state.slice(1);
+  return uiText(state.charAt(0).toUpperCase() + state.slice(1));
 }
 
 function formatInviteAudience(invite: Awaited<ReturnType<typeof accessApi.listInvites>>["invites"][number]) {
-  if (invite.allowedJoinTypes === "agent") return "Agent";
-  if (invite.allowedJoinTypes === "both") return invite.humanRole ? `Human or agent · ${invite.humanRole}` : "Human or agent";
-  return invite.humanRole ?? "Human";
+  if (invite.allowedJoinTypes === "agent") return uiText("Agent");
+  if (invite.allowedJoinTypes === "both") {
+    return invite.humanRole
+      ? `${uiText("Human or agent")} · ${uiText(invite.humanRole)}`
+      : uiText("Human or agent");
+  }
+  return uiText(invite.humanRole ?? "Human");
 }

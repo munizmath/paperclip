@@ -56,6 +56,8 @@ import {
   readGitHubPrivateKeyFile,
 } from "./github-private-key-file";
 import { describeError } from "@/api/errors";
+import { i18n } from "@/i18n";
+import { translateLegacyPtBr } from "@/i18n/legacy-pt-br";
 
 const providerNames: Record<ChatProvider, string> = {
   speko: "Speko",
@@ -69,6 +71,10 @@ const providerNames: Record<ChatProvider, string> = {
 };
 
 const knownProviders = new Set(Object.keys(providerNames));
+
+function uiText(value: string): string {
+  return i18n.resolvedLanguage === "pt-BR" ? translateLegacyPtBr(value) : value;
+}
 
 function isProvider(value: string | null): value is ChatProvider {
   return value !== null && knownProviders.has(value);
@@ -129,7 +135,7 @@ export function ChatConnectionPurpose({ provider, onChat, onTools, slackLabels }
         <div>
           <h1 className="text-xl font-bold">Choose how to connect</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            What should this {providerNames[provider]} connection do?
+            {uiText(`What should this ${providerNames[provider]} connection do?`)}
           </p>
         </div>
         <div className="grid gap-3">
@@ -144,8 +150,7 @@ export function ChatConnectionPurpose({ provider, onChat, onTools, slackLabels }
                 Chat with an agent
               </span>
               <span className="mt-1 block text-sm text-muted-foreground">
-                People in {providerNames[provider]} can start and continue
-                Paperclip tasks.
+                {uiText(`People in ${providerNames[provider]} can start and continue Paperclip tasks.`)}
               </span>
             </span>
           </button>
@@ -162,8 +167,7 @@ export function ChatConnectionPurpose({ provider, onChat, onTools, slackLabels }
                 Use this connection as an agent tool
               </span>
               <span className="mt-1 block text-sm text-muted-foreground">
-                Let agents use {providerNames[provider]} actions and data while
-                they work.
+                {uiText(`Let agents use ${providerNames[provider]} actions and data while they work.`)}
               </span>
             </span>
           </button>

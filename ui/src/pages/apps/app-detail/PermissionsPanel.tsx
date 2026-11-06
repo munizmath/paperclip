@@ -14,9 +14,15 @@ import { type InstallState } from "@/lib/tool-installs";
 import { QuarantinedActionsReview } from "./SetupPanel";
 import { ActionTestDialog } from "./ActionTestDialog";
 import type { AccessDraft, AppDetailSectionProps } from "./types";
+import { i18n } from "@/i18n";
+import { translateLegacyPtBr } from "@/i18n/legacy-pt-br";
 
 type ActionPermission = "off" | "ask" | "allowed";
 type ActionKindFilter = "all" | "read" | "write";
+
+function uiText(value: string): string {
+  return i18n.resolvedLanguage === "pt-BR" ? translateLegacyPtBr(value) : value;
+}
 
 export function PermissionsPanel({
   afterAgentAccess,
@@ -167,8 +173,8 @@ function AgentAccessSection({
               selectedAgentIds={access.agentIds}
               disabled={disabled}
               triggerLabel={access.agentIds.size === 0
-                ? "Choose agents"
-                : `${access.agentIds.size} ${access.agentIds.size === 1 ? "agent" : "agents"} selected`}
+                ? uiText("Choose agents")
+                : `${access.agentIds.size} ${uiText(access.agentIds.size === 1 ? "agent" : "agents")} ${uiText(access.agentIds.size === 1 ? "selected" : "selected plural")}`}
               emptyMessage="You cannot edit any agents yet."
               isAgentDisabled={(agent) => requiredAgentIds.has(agent.id)}
               getDescription={(agent) => requiredAgentIds.has(agent.id) ? "Required by this connection's install setting" : agent.title}
@@ -297,21 +303,21 @@ export function ActionsSection({
               onChange={(event) => setQuery(event.target.value)}
             />
           </div>
-          <FilterChip label={`All ${readOnly.length + canChange.length}`} active={kindFilter === "all"} onClick={() => setKindFilter("all")} />
-          <FilterChip label={`Read ${readOnly.length}`} active={kindFilter === "read"} onClick={() => setKindFilter("read")} />
-          <FilterChip label={`Write ${canChange.length}`} active={kindFilter === "write"} onClick={() => setKindFilter("write")} />
+          <FilterChip label={`${uiText("All")} ${readOnly.length + canChange.length}`} active={kindFilter === "all"} onClick={() => setKindFilter("all")} />
+          <FilterChip label={`${uiText("Read")} ${readOnly.length}`} active={kindFilter === "read"} onClick={() => setKindFilter("read")} />
+          <FilterChip label={`${uiText("Write")} ${canChange.length}`} active={kindFilter === "write"} onClick={() => setKindFilter("write")} />
         </div>
-        <p className="text-xs text-muted-foreground">{visibleCount} matches · sorted A–Z</p>
+        <p className="text-xs text-muted-foreground">{visibleCount} {uiText("matches")} · {uiText("sorted A–Z")}</p>
       </div>
 
       {visibleCount === 0 ? (
         <div className="py-6 text-center text-sm text-muted-foreground">
-          No actions match “{query}”. Clear the search to see them all.
+          {uiText("No actions match")} “{query}”. {uiText("Clear the search to see them all.")}
         </div>
       ) : (
         <div className="space-y-6">
           <ActionGroup
-            title={`Read (${visibleRead.length})`}
+            title={`${uiText("Read")} (${visibleRead.length})`}
             actions={visibleRead}
             connectionId={connectionId}
             appName={appName}
@@ -326,7 +332,7 @@ export function ActionsSection({
             }}
           />
           <ActionGroup
-            title={`Write (${visibleWrite.length})`}
+            title={`${uiText("Write")} (${visibleWrite.length})`}
             actions={visibleWrite}
             connectionId={connectionId}
             appName={appName}
@@ -403,9 +409,9 @@ function ActionGroup({
           // connection's writes is one choice rather than one per action;
           // per-row overrides stay underneath.
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="sr-only">{`Set every action in ${title}`}</span>
+                <span className="sr-only">{`${uiText("Set every action in")} ${title}`}</span>
             <select
-              aria-label={`Set every action in ${title}`}
+              aria-label={`${uiText("Set every action in")} ${title}`}
               value={groupValue}
               disabled={disabled}
               onChange={(event) => {
@@ -418,7 +424,7 @@ function ActionGroup({
             >
               {groupValue === "" ? <option value="">Mixed</option> : null}
               {PERMISSION_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>{`Set all: ${option.label}`}</option>
+                <option key={option.value} value={option.value}>{`${uiText("Set all:")} ${uiText(option.label)}`}</option>
               ))}
             </select>
           </label>
@@ -499,7 +505,7 @@ function ActionRow({
                 glance to spot and one click to move. */}
             <span
               className="rounded-full border border-border px-1.5 py-px text-xs font-medium uppercase tracking-wide text-muted-foreground"
-              title={`Paperclip classified this action as ${action.riskLevel}`}
+              title={`${uiText("Paperclip classified this action as")} ${action.riskLevel}`}
             >
               {action.riskLevel}
             </span>

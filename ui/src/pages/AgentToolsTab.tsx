@@ -25,6 +25,12 @@ import {
 import { cn } from "../lib/utils";
 import { brandChipBadge } from "../lib/status-colors";
 import { installPayload, installStateFrom, isAgentInstalled, INSTALLED_HINT } from "../lib/tool-installs";
+import { i18n } from "@/i18n";
+import { translateLegacyPtBr } from "@/i18n/legacy-pt-br";
+
+function uiText(value: string): string {
+  return i18n.resolvedLanguage === "pt-BR" ? translateLegacyPtBr(value) : value;
+}
 
 function isGitHubConnection(connection: ToolConnection): boolean {
   return (connection.config?.sourceTemplateKey ?? connection.transportConfig?.sourceTemplateKey) === "github";
@@ -202,7 +208,7 @@ function InstalledAppsSection({
         <div>
           <h3 className="text-sm font-semibold text-foreground">Installed apps</h3>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Installed apps load tools into {agentName}'s context on every run. Permitted-only apps do not add context cost.
+            {uiText(`Installed apps load tools into ${agentName}'s context on every run. Permitted-only apps do not add context cost.`)}
           </p>
         </div>
         <InstallSaveStatusChip pending={saving} unsaved={unsaved} error={error} />
@@ -563,14 +569,16 @@ export function AgentToolsTab({ agent, companyId }: { agent: AgentDetailRecord; 
     <div className="space-y-4">
       <EnforcementBanner
         tone="info"
-        title="Effective access"
+        title={uiText("Effective access")}
         body={
           <>
-            This is exactly the tool set Paperclip will accept for{" "}
-            <span className="font-medium">{agent.name}</span>. Profile and policy edits are
-            reflected within ~5 seconds. The agent's prompt can narrow this list but{" "}
-            <span className="font-medium">cannot expand it</span> — everything else is blocked by
-            default.
+            {uiText("This is exactly the tool set Paperclip will accept for")} {" "}
+            <span className="font-medium">{agent.name}</span>
+            {uiText(
+              ". Profile and policy edits are reflected within ~5 seconds. The agent's prompt can narrow this list but",
+            )}{" "}
+            <span className="font-medium">{uiText("cannot expand it")}</span>{" "}
+            {uiText("— everything else is blocked by default.")}
           </>
         }
       />

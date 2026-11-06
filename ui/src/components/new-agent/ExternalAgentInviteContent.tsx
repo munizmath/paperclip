@@ -9,6 +9,12 @@ import { AgentSetupPrompt } from "../AgentSetupPrompt";
 import { Button } from "../ui/button";
 import { DialogDescription, DialogTitle } from "../ui/dialog";
 import { cn } from "@/lib/utils";
+import { i18n } from "@/i18n";
+import { translateLegacyPtBr } from "@/i18n/legacy-pt-br";
+
+function uiText(value: string): string {
+  return i18n.resolvedLanguage === "pt-BR" ? translateLegacyPtBr(value) : value;
+}
 
 export type ExternalAgentPreset = "dot" | "grok_bot" | "muse" | "hermes" | "other";
 export type DotConnectionState = {
@@ -167,11 +173,27 @@ export function ExternalAgentInviteContent({
   const dot = preset === "dot";
   const ready = museReady || (dot && connection.phase === "ready" && !connection.problem);
   const connecting = dot && connection.phase !== "waiting";
-  const progressLabel = connection.problem === "agent_unavailable" ? "Agent unavailable"
+  const progressLabel = uiText(connection.problem === "agent_unavailable" ? "Agent unavailable"
     : connection.problem === "offline" ? "Updates paused"
     : connection.problem === "event_timeout" ? "Needs attention"
     : connection.phase === "finishing" ? "Finishing setup…"
-    : connection.phase === "connected" ? "Connecting…" : "Confirming connection…";
+    : connection.phase === "connected" ? "Connecting…" : "Confirming connection…");
+  const dialogTitle = !provider ? uiText("Invite an external agent")
+    : muse ? ready ? uiText("Muse is connected") : museDetails || museAwaitingInvitation ? uiText("Invite your Muse") : uiText("Connect your Muse")
+    : dot ? ready ? uiText("Your Dot is connected") : uiText("Connect your Dot")
+    : preset === "hermes" ? uiText("Invite your Hermes agent") : uiText("Invite your agent");
+  const dialogDescription = !provider ? `${uiText("Bring an agent you already use into")} ${companyName}.`
+    : muse ? museDetails ? `${uiText("Give your personal Muse a name and role in")} ${companyName}.`
+      : museAwaitingInvitation ? uiText("Muse requires an authenticated Paperclip instance with a public HTTPS URL and a company operator account.")
+      : ready ? `${uiText("Muse can receive assignments and work with")} ${companyName}.`
+      : !prompt && !museConnection?.paired ? uiText("We’re checking whether this instance can prepare Muse setup.")
+      : uiText("Paste the setup prompt into your current Muse conversation. Complete Connect Paperclip if Muse asks, then approve this Paperclip hostname. Muse keeps the connection credential in its secure vault. The hostname permission applies to future requests.")
+    : ready ? `${uiText("Your Dot can now receive assignments and work with")} ${companyName}.`
+    : connection.problem === "agent_unavailable" ? uiText("Your Dot is connected. This agent must be available in Paperclip before it can receive assignments.")
+    : connection.phase === "finishing" ? uiText("Your Dot has connected and confirmed task updates. Paperclip is preparing it for assignments.")
+    : connecting ? uiText("Your Dot has connected. We’re checking that task updates can travel both ways.")
+    : dot ? uiText("Copy the setup prompt and send it to your Dot in ChatGPT. Your Dot will connect itself; we’ll watch for it here.")
+    : `${uiText("Copy the invitation prompt and send it to your")} ${preset === "hermes" ? "Hermes " : ""}${uiText("agent")}. ${uiText("Approve its join request in Paperclip when it’s ready.")}`;
   return <>
     <div className="min-h-0 space-y-6 overflow-y-auto px-6 pb-6 pt-8 sm:px-8">
       <div className="space-y-3 pr-5">
@@ -179,21 +201,10 @@ export function ExternalAgentInviteContent({
         {provider && <AdapterMark type={provider.adapter} className="size-10" />}
         <div className="space-y-2">
           <DialogTitle className="text-xl font-semibold tracking-tight">
-            {!provider ? "Invite an external agent" : muse ? ready ? "Muse is connected" : museDetails || museAwaitingInvitation ? "Invite your Muse" : "Connect your Muse" : dot ? ready ? "Your Dot is connected" : "Connect your Dot" : preset === "hermes" ? "Invite your Hermes agent" : "Invite your agent"}
+            {dialogTitle}
           </DialogTitle>
           <DialogDescription className="text-sm leading-relaxed">
-            {!provider ? `Bring an agent you already use into ${companyName}.`
-              : muse ? museDetails ? `Give your personal Muse a name and role in ${companyName}.`
-              : museAwaitingInvitation ? "Muse requires an authenticated Paperclip instance with a public HTTPS URL and a company operator account."
-              : ready ? `Muse can receive assignments and work with ${companyName}.`
-              : !prompt && !museConnection?.paired ? "We’re checking whether this instance can prepare Muse setup."
-              : "Paste the setup prompt into your current Muse conversation. Complete Connect Paperclip if Muse asks, then approve this Paperclip hostname. Muse keeps the connection credential in its secure vault. The hostname permission applies to future requests."
-              : ready ? `Your Dot can now receive assignments and work with ${companyName}.`
-              : connection.problem === "agent_unavailable" ? "Your Dot is connected. This agent must be available in Paperclip before it can receive assignments."
-              : connection.phase === "finishing" ? "Your Dot has connected and confirmed task updates. Paperclip is preparing it for assignments."
-              : connecting ? "Your Dot has connected. We’re checking that task updates can travel both ways."
-              : dot ? "Copy the setup prompt and send it to your Dot in ChatGPT. Your Dot will connect itself; we’ll watch for it here."
-              : `Copy the invitation prompt and send it to your ${preset === "hermes" ? "Hermes " : ""}agent. Approve its join request in Paperclip when it’s ready.`}
+            {dialogDescription}
           </DialogDescription>
         </div>
       </div>
